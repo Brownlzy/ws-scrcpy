@@ -256,7 +256,7 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
 
         const actions = document.createElement('div');
         actions.className = 'frp-card-actions';
-        this.appendDedicatedLinkActions(actions, device);
+        this.appendDedicatedLinkActions(actions, device, false);
 
         const button = document.createElement('button');
         button.className = 'action-button active';
@@ -669,7 +669,7 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
         return device.udid === targetUdid || device.frpLocalSerial === targetUdid || device.frpServerName === targetUdid;
     }
 
-    private appendDedicatedLinkActions(parent: HTMLElement, device: GoogDeviceDescriptor): void {
+    private appendDedicatedLinkActions(parent: HTMLElement, device: GoogDeviceDescriptor, canCopy = true): void {
         const url = this.buildDedicatedDeviceUrl(device.udid);
         const open = document.createElement('a');
         open.className = 'action-button frp-action';
@@ -680,6 +680,9 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
         open.innerText = 'Open device';
         parent.appendChild(open);
 
+        if (!canCopy) {
+            return;
+        }
         const copy = document.createElement('button');
         copy.className = 'action-button frp-action';
         copy.type = 'button';
