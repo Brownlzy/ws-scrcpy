@@ -138,7 +138,7 @@ delete packageJson.devDependencies;
 
 const back: webpack.Configuration = {
     entry: path.join(PROJECT_ROOT, './src/server/index.ts'),
-    externals: [nodeExternals()],
+    externals: process.env.WS_SCRCPY_PORTABLE_BUNDLE === 'true' ? [] : [nodeExternals()],
     plugins: [
         new GeneratePackageJsonPlugin(basePackage),
         buildConfigDefinePlugin,

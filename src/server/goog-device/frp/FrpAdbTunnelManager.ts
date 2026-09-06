@@ -26,10 +26,12 @@ export class FrpAdbTunnelManager {
     private readonly sessions = new Map<string, TunnelSession>();
     private readonly tempConfigDir: string;
     private readonly executablePath: string;
+    private readonly adbExecutablePath: string;
 
     constructor(private readonly frpc: Required<FrpcProcessConfig>, private readonly config: Required<FrpAdbConfig>) {
         this.tempConfigDir = path.resolve(process.cwd(), frpc.tempConfigDir);
         this.executablePath = path.resolve(process.cwd(), frpc.executablePath);
+        this.adbExecutablePath = this.resolveExecutablePath(config.executablePath);
     }
 
     public async connect(udid: string, serverName?: string): Promise<string> {
@@ -184,6 +186,13 @@ export class FrpAdbTunnelManager {
         }
     }
 
+    private resolveExecutablePath(executablePath: string): string {
+        if (path.isAbsolute(executablePath)) {
+            return executablePath;
+        }
+        return /[\\/]/.test(executablePath) ? path.resolve(process.cwd(), executablePath) : executablePath;
+    }
+
     private createConfigPath(visitorName: string): string {
         return path.join(this.tempConfigDir, `${visitorName}.toml`);
     }
@@ -219,12 +228,12 @@ export class FrpAdbTunnelManager {
 
     private async adb(args: string[], timeoutMs: number): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            const proc = spawn('adb', args, { stdio: ['ignore', 'pipe', 'pipe'] });
+            const proc = spawn(this.adbExecutablePath, args, { stdio: ['ignore', 'pipe', 'pipe'] });
             let output = '';
             let errorOutput = '';
             const timeout = setTimeout(() => {
                 proc.kill();
-                reject(new Error(`adb ${args.join(' ')} timed out`));
+                reject(new Error(`${this.adbExecutablePath} ${args.join(' ')} timed out`));
             }, timeoutMs);
             proc.stdout.on('data', (data) => {
                 output += data.toString();
@@ -242,7 +251,7 @@ export class FrpAdbTunnelManager {
                     resolve(output);
                     return;
                 }
-                reject(new Error(`adb ${args.join(' ')} failed with ${code}: ${errorOutput || output}`));
+                reject(new Error(`${this.adbExecutablePath} ${args.join(' ')} failed with ${code}: ${errorOutput || output}`));
             });
         });
     }

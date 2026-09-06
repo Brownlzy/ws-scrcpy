@@ -185,6 +185,17 @@ export class ControlCenter extends BaseControlCenter<GoogDeviceDescriptor> imple
         await this.frpRemoteDeviceService?.disconnect(udidOrSerial);
     }
 
+    public async connectFrpDevice(udid: string): Promise<string> {
+        const localDevice = this.getDevice(udid);
+        if (localDevice?.isConnected()) {
+            return udid;
+        }
+        if (!this.frpRemoteDeviceService) {
+            throw new Error('frp remote device support is not configured');
+        }
+        return this.frpRemoteDeviceService.connect(udid);
+    }
+
     public async runCommand(command: ControlCenterCommand): Promise<void> {
         const udid = command.getUdid();
         const type = command.getType();

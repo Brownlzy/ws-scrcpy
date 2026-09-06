@@ -152,6 +152,7 @@ body.list #device_list_menu {
 }
 
 #devices .device-list div.desc-block.stream,
+#devices .device-list div.desc-block.dedicated-link,
 #devices .device-list div.desc-block.server_pid,
 #devices .device-list div.desc-block.net_interface {
     border: 1px solid var(--device-border-color);
@@ -348,6 +349,7 @@ body.list #device_list_menu {
 }
 
 #devices .frp-action,
+#devices .device-list div.device div.desc-block.dedicated-link .action-button,
 #devices .frp-card .action-button,
 #devices .frp-connected-row .action-button,
 #devices .frp-search .action-button {
@@ -357,6 +359,7 @@ body.list #device_list_menu {
     cursor: pointer;
     font: inherit;
     padding: 4px 7px;
+    text-decoration: none;
 }
 
 #devices .frp-card .action-button:disabled {

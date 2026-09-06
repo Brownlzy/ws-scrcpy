@@ -61,6 +61,7 @@ export class Config {
                 ...config.frpc,
             },
             adb: {
+                executablePath: 'adb',
                 bindAddr: '127.0.0.1',
                 portRange: {
                     start: 20000,
@@ -80,10 +81,11 @@ export class Config {
                 !frpConfig.frpc?.serverAddr ||
                 !frpConfig.frpc?.serverPort ||
                 !frpConfig.frpc?.authToken ||
+                !frpConfig.adb?.executablePath ||
                 !frpConfig.adb?.secretKey)
         ) {
             throw Error(
-                'frp config requires frps.baseUrl, frpc.executablePath, frpc.serverAddr, frpc.serverPort, frpc.authToken, and adb.secretKey',
+                'frp config requires frps.baseUrl, frpc.executablePath, frpc.serverAddr, frpc.serverPort, frpc.authToken, adb.executablePath, and adb.secretKey',
             );
         }
         return frpConfig;

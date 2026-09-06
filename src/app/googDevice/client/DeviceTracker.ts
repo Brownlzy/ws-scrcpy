@@ -38,7 +38,9 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
     protected tableId = 'goog_device_list';
     private searchText = '';
 
-    public static start(hostItem: HostItem): DeviceTracker {
+    public static start(
+        hostItem: HostItem & { targetUdid?: string; autoConnect?: boolean; disconnectOnClose?: boolean },
+    ): DeviceTracker {
         const url = this.buildUrlForTracker(hostItem).toString();
         let instance = this.instancesByUrl.get(url);
         if (!instance) {
@@ -209,6 +211,10 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
 
     private filterFrpDevices(devices: GoogDeviceDescriptor[]): GoogDeviceDescriptor[] {
         const query = this.searchText.trim().toLowerCase();
+        const targetUdid = this.params.targetUdid;
+        if (targetUdid) {
+            return devices.filter((device) => this.matchesTarget(device, targetUdid));
+        }
         if (!query) {
             return devices;
         }
@@ -248,6 +254,10 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
         card.className = `frp-card available ${device.state === DeviceState.DEVICE ? 'active' : 'not-active'}`;
         card.appendChild(this.createCardHeader(device));
 
+        const actions = document.createElement('div');
+        actions.className = 'frp-card-actions';
+        this.appendDedicatedLinkActions(actions, device);
+
         const button = document.createElement('button');
         button.className = 'action-button active';
         button.innerText = 'Connect frp';
@@ -256,7 +266,8 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
         button.setAttribute(Attribute.UDID, device.udid);
         button.setAttribute(Attribute.COMMAND, ControlCenterCommand.CONNECT_FRP_DEVICE);
         button.onclick = this.onActionButtonClick;
-        card.appendChild(button);
+        actions.appendChild(button);
+        card.appendChild(actions);
         return card;
     }
 
@@ -301,6 +312,7 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
         const adbDevice = { ...device, udid: effectiveUdid };
         const fullName = `${this.id}_${Util.escapeUdid(device.udid)}`;
 
+        this.appendDedicatedLinkActions(parent, device);
         parent.appendChild(this.createServerButton(adbDevice));
 
         DeviceTracker.tools.forEach((tool) => {
@@ -411,6 +423,9 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
     }
 
     protected buildDeviceRow(tbody: Element, device: GoogDeviceDescriptor): void {
+        if (this.params.targetUdid && !this.matchesTarget(device, this.params.targetUdid)) {
+            return;
+        }
         let selectedInterfaceUrl = '';
         let selectedInterfaceName = '';
         const blockClass = 'desc-block';
@@ -463,6 +478,10 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
             }
             services.appendChild(frpBlock);
         }
+        const dedicatedBlock = document.createElement('div');
+        dedicatedBlock.classList.add(blockClass, 'dedicated-link');
+        this.appendDedicatedLinkActions(dedicatedBlock, device);
+        services.appendChild(dedicatedBlock);
 
         const adbDevice = { ...device, udid: effectiveUdid };
         if (canUseAdbActions) {
@@ -625,6 +644,96 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
 
     protected getChannelCode(): string {
         return ChannelCode.GTRC;
+    }
+
+    protected buildDirectWebSocketUrl(): URL {
+        const url = super.buildDirectWebSocketUrl();
+        const { targetUdid, autoConnect, disconnectOnClose } = this.params;
+        if (targetUdid) {
+            url.searchParams.set('targetUdid', targetUdid);
+        }
+        if (autoConnect) {
+            url.searchParams.set('autoConnect', 'true');
+        }
+        if (disconnectOnClose) {
+            url.searchParams.set('disconnectOnClose', 'true');
+        }
+        return url;
+    }
+
+    protected supportMultiplexing(): boolean {
+        return !this.params.targetUdid;
+    }
+
+    private matchesTarget(device: GoogDeviceDescriptor, targetUdid: string): boolean {
+        return device.udid === targetUdid || device.frpLocalSerial === targetUdid || device.frpServerName === targetUdid;
+    }
+
+    private appendDedicatedLinkActions(parent: HTMLElement, device: GoogDeviceDescriptor): void {
+        const url = this.buildDedicatedDeviceUrl(device.udid);
+        const open = document.createElement('a');
+        open.className = 'action-button frp-action';
+        open.href = url;
+        open.rel = 'noopener noreferrer';
+        open.target = '_blank';
+        open.title = `Open dedicated device page for ${device.udid}`;
+        open.innerText = 'Open device';
+        parent.appendChild(open);
+
+        const copy = document.createElement('button');
+        copy.className = 'action-button frp-action';
+        copy.type = 'button';
+        copy.title = `Copy dedicated device link for ${device.udid}`;
+        copy.innerText = 'Copy link';
+        copy.onclick = () => {
+            this.copyText(url, copy);
+        };
+        parent.appendChild(copy);
+    }
+
+    private buildDedicatedDeviceUrl(udid: string): string {
+        const { secure, hostname } = this.params;
+        const protocol = secure ? 'https:' : 'http:';
+        const host = hostname || location.hostname;
+        const port = typeof this.params.port === 'number' ? `:${this.params.port}` : location.port ? `:${location.port}` : '';
+        const pathPrefix = this.getPathPrefix();
+        return `${protocol}//${host}${port}${pathPrefix}/device/${encodeURIComponent(udid)}`;
+    }
+
+    private getPathPrefix(): string {
+        const pathname = this.params.pathname || location.pathname || '/';
+        const parts = pathname.split('/').filter((part) => !!part);
+        const deviceIndex = parts.indexOf('device');
+        const baseParts = deviceIndex === -1 ? parts : parts.slice(0, deviceIndex);
+        return baseParts.length ? `/${baseParts.join('/')}` : '';
+    }
+
+    private copyText(text: string, button: HTMLButtonElement): void {
+        const resetText = button.innerText;
+        const done = () => {
+            button.innerText = 'Copied';
+            setTimeout(() => {
+                button.innerText = resetText;
+            }, 1000);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(() => this.copyTextFallback(text, done));
+            return;
+        }
+        this.copyTextFallback(text, done);
+    }
+
+    private copyTextFallback(text: string, onCopied: () => void): void {
+        const input = document.createElement('textarea');
+        input.value = text;
+        input.setAttribute('readonly', 'readonly');
+        input.style.position = 'fixed';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        input.remove();
+        onCopied();
     }
 
     public destroy(): void {

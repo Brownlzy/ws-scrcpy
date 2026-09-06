@@ -54,6 +54,7 @@ export interface FrpcProcessConfig {
 }
 
 export interface FrpAdbConfig {
+    executablePath?: string;
     bindAddr?: string;
     portRange?: {
         start: number;

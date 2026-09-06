@@ -1,6 +1,7 @@
 import '../../../vendor/Genymobile/scrcpy/scrcpy-server.jar';
 import '../../../vendor/Genymobile/scrcpy/LICENSE';
 
+import * as fs from 'fs';
 import { Device } from './Device';
 import { ARGS_STRING, SERVER_PACKAGE, SERVER_PROCESS_NAME, SERVER_VERSION } from '../../common/Constants';
 import path from 'path';
@@ -8,7 +9,7 @@ import PushTransfer from '@dead50f7/adbkit/lib/adb/sync/pushtransfer';
 import { ServerVersion } from './ServerVersion';
 
 const TEMP_PATH = '/data/local/tmp/';
-const FILE_DIR = path.join(__dirname, 'vendor/Genymobile/scrcpy');
+const FILE_DIR = resolveResourceDir('vendor/Genymobile/scrcpy');
 const FILE_NAME = 'scrcpy-server.jar';
 const RUN_COMMAND = `CLASSPATH=${TEMP_PATH}${FILE_NAME} nohup app_process ${ARGS_STRING}`;
 
@@ -137,5 +138,18 @@ export class ScrcpyServer {
             return list;
         }
         return;
+    }
+}
+
+function resolveResourceDir(relativePath: string): string {
+    const cwdPath = path.resolve(process.cwd(), relativePath);
+    return fsExists(cwdPath) ? cwdPath : path.join(__dirname, relativePath);
+}
+
+function fsExists(filePath: string): boolean {
+    try {
+        return fs.existsSync(filePath);
+    } catch (_error) {
+        return false;
     }
 }

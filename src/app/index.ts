@@ -6,7 +6,9 @@ import { Tool } from './client/Tool';
 window.onload = async function (): Promise<void> {
     const hash = location.hash.replace(/^#!/, '');
     const parsedQuery = new URLSearchParams(hash);
-    const action = parsedQuery.get('action');
+    const pathParams = parsePathParams();
+    const action = parsedQuery.get('action') || pathParams.get('action');
+    const targetUdid = pathParams.get('targetUdid') || undefined;
 
     /// #if USE_BROADWAY
     const { BroadwayPlayer } = await import('./player/BroadwayPlayer');
@@ -87,7 +89,8 @@ window.onload = async function (): Promise<void> {
     /// #if INCLUDE_DEV_TOOLS
     const { DevtoolsClient } = await import('./googDevice/client/DevtoolsClient');
     if (action === DevtoolsClient.ACTION) {
-        DevtoolsClient.start(DevtoolsClient.parseParameters(parsedQuery));
+        const params = parsedQuery.get('action') ? parsedQuery : pathParams;
+        DevtoolsClient.start(DevtoolsClient.parseParameters(params));
         return;
     }
     tools.push(DevtoolsClient);
@@ -108,5 +111,36 @@ window.onload = async function (): Promise<void> {
             DeviceTracker.registerTool(tool);
         });
     }
+    if (targetUdid) {
+        const { DeviceTracker } = await import('./googDevice/client/DeviceTracker');
+        const secure = location.protocol === 'https:';
+        const port = location.port ? parseInt(location.port, 10) : secure ? 443 : 80;
+        DeviceTracker.start({
+            type: 'android',
+            secure,
+            port,
+            hostname: location.hostname,
+            pathname: location.pathname,
+            useProxy: false,
+            targetUdid,
+            autoConnect: true,
+            disconnectOnClose: true,
+        });
+        return;
+    }
     HostTracker.start();
 };
+
+function parsePathParams(): URLSearchParams {
+    const params = new URLSearchParams();
+    const parts = location.pathname
+        .split('/')
+        .map((part) => decodeURIComponent(part))
+        .filter((part) => !!part);
+    const deviceIndex = parts.indexOf('device');
+    const deviceId = deviceIndex === -1 ? undefined : parts[deviceIndex + 1];
+    if (deviceId) {
+        params.set('targetUdid', deviceId);
+    }
+    return params;
+}

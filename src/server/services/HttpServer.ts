@@ -1,5 +1,6 @@
 import * as http from 'http';
 import * as https from 'https';
+import * as fs from 'fs';
 import path from 'path';
 import { Service } from './Service';
 import { Utils } from '../Utils';
@@ -9,7 +10,7 @@ import { TypedEmitter } from '../../common/TypedEmitter';
 import * as process from 'process';
 import { EnvName } from '../EnvName';
 
-const DEFAULT_STATIC_DIR = path.join(__dirname, './public');
+const DEFAULT_STATIC_DIR = resolveResourceDir('public');
 
 const PATHNAME = process.env[EnvName.WS_SCRCPY_PATHNAME] || __PATHNAME__;
 
@@ -78,6 +79,10 @@ export class HttpServer extends TypedEmitter<HttpServerEvents> implements Servic
         this.mainApp = express();
         if (HttpServer.SERVE_STATIC && HttpServer.PUBLIC_DIR) {
             this.mainApp.use(PATHNAME, express.static(HttpServer.PUBLIC_DIR));
+            this.mainApp.use(this.createStaticFallbackPath('device'), express.static(HttpServer.PUBLIC_DIR));
+            this.mainApp.get(this.createStaticFallbackPath('device/:udid'), (_req, res) => {
+                res.sendFile(path.join(HttpServer.PUBLIC_DIR, 'index.html'));
+            });
 
             /// #if USE_WDA_MJPEG_SERVER
 
@@ -139,5 +144,23 @@ export class HttpServer extends TypedEmitter<HttpServerEvents> implements Servic
         this.servers.forEach((item) => {
             item.server.close();
         });
+    }
+
+    private createStaticFallbackPath(route: string): string {
+        const base = PATHNAME.replace(/\/+$/, '');
+        return `${base}/${route}`;
+    }
+}
+
+function resolveResourceDir(name: string): string {
+    const cwdPath = path.resolve(process.cwd(), name);
+    return fsExists(cwdPath) ? cwdPath : path.join(__dirname, name);
+}
+
+function fsExists(filePath: string): boolean {
+    try {
+        return fs.existsSync(filePath);
+    } catch (_error) {
+        return false;
     }
 }
