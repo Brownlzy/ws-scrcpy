@@ -25,7 +25,6 @@ import {
 import DeviceMessage from '../DeviceMessage';
 import { DisplayInfo } from '../../DisplayInfo';
 import { Attribute } from '../../Attribute';
-import { HostTracker } from '../../client/HostTracker';
 import { ACTION } from '../../../common/Action';
 import { StreamReceiverScrcpy } from './StreamReceiverScrcpy';
 import { ParamsDeviceTracker } from '../../../types/ParamsDeviceTracker';
@@ -545,8 +544,5 @@ export class StreamClientScrcpy
 
     private static onConfigureDialogClosed = (event: { dialog: ConfigureScrcpy; result: boolean }): void => {
         event.dialog.off('closed', StreamClientScrcpy.onConfigureDialogClosed);
-        if (event.result) {
-            HostTracker.getInstance().destroy();
-        }
     };
 }

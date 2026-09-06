@@ -233,3 +233,152 @@ body.list #device_list_menu {
     font-size: larger;
     font-weight: bolder;
 }
+
+#devices .frp-device-board {
+    font-family: monospace;
+    font-size: var(--font-size);
+}
+
+#devices .frp-search {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 14px;
+}
+
+#devices .frp-search input {
+    background-color: var(--main-bg-color);
+    border: 1px solid var(--device-border-color);
+    box-sizing: border-box;
+    color: var(--text-color);
+    flex: 1 1 auto;
+    font: inherit;
+    min-width: 0;
+    padding: 7px 9px;
+    width: 100%;
+}
+
+#devices .frp-section {
+    padding: 0 20px 18px;
+}
+
+#devices .frp-section-title {
+    border-bottom: 1px solid var(--device-border-color);
+    font-weight: bolder;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+}
+
+#devices .frp-connected-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#devices .frp-connected-row {
+    align-items: center;
+    border-bottom: 1px solid var(--device-list-stripe-color);
+    display: grid;
+    gap: 8px 14px;
+    grid-template-columns: minmax(180px, 1fr) minmax(160px, 1fr) auto;
+    padding: 6px 0;
+}
+
+#devices .frp-connected-id {
+    color: var(--url-color);
+    overflow-wrap: anywhere;
+}
+
+#devices .frp-connected-meta,
+#devices .frp-card-meta {
+    color: var(--text-color-light);
+    overflow-wrap: anywhere;
+}
+
+#devices .frp-connected-actions,
+#devices .frp-card-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+#devices .frp-flow-row {
+    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#devices .frp-card {
+    border: 1px solid var(--device-border-color);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: space-between;
+    min-height: 82px;
+    padding: 10px;
+    width: 220px;
+}
+
+#devices .frp-card.not-active {
+    color: var(--text-color-light);
+}
+
+#devices .frp-card-header {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+#devices .frp-card-id {
+    color: var(--url-color);
+    font-weight: bolder;
+    overflow-wrap: anywhere;
+}
+
+#devices .frp-card-state {
+    color: var(--text-color-light);
+    flex: 0 0 auto;
+}
+
+#devices .frp-card-state.online {
+    color: green;
+}
+
+#devices .frp-action,
+#devices .frp-card .action-button,
+#devices .frp-connected-row .action-button,
+#devices .frp-search .action-button {
+    background-color: transparent;
+    border: 1px solid var(--device-border-color);
+    color: var(--button-text-color);
+    cursor: pointer;
+    font: inherit;
+    padding: 4px 7px;
+}
+
+#devices .frp-card .action-button:disabled {
+    color: var(--text-color-light);
+    cursor: default;
+}
+
+#devices .frp-empty {
+    color: var(--text-color-light);
+    padding: 6px 0;
+}
+
+#devices .hidden {
+    display: none;
+}
+
+@media (max-width: 700px) {
+    #devices .frp-connected-row {
+        grid-template-columns: 1fr;
+    }
+
+    #devices .frp-card {
+        width: 100%;
+    }
+}

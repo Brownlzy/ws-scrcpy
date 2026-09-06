@@ -47,6 +47,7 @@ async function loadGoogModules() {
 
     /// #if INCLUDE_ADB_SHELL
     const { RemoteShell } = await import('./goog-device/mw/RemoteShell');
+    mwList.push(RemoteShell);
     mw2List.push(RemoteShell);
     /// #endif
 

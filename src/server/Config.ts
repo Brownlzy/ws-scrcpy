@@ -1,7 +1,7 @@
 import * as process from 'process';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Configuration, HostItem, ServerItem } from '../types/Configuration';
+import { Configuration, FrpConfig, HostItem, ServerItem } from '../types/Configuration';
 import { EnvName } from './EnvName';
 import YAML from 'yaml';
 
@@ -39,10 +39,54 @@ export class Config {
             announceApplTracker,
             server,
             remoteHostList: [],
+            frp: undefined as unknown as FrpConfig,
         };
         const merged = Object.assign({}, defaultConfig, userConfig);
         merged.server = merged.server.map((item) => this.parseServerItem(item));
+        if (merged.frp) {
+            merged.frp = this.parseFrpConfig(merged.frp);
+        }
         return merged;
+    }
+    private static parseFrpConfig(config: FrpConfig): FrpConfig {
+        const frpConfig: FrpConfig = {
+            ...config,
+            enabled: config.enabled !== false,
+            frps: {
+                timeoutMs: 5000,
+                ...config.frps,
+            },
+            frpc: {
+                tempConfigDir: './tmp/frpc',
+                ...config.frpc,
+            },
+            adb: {
+                bindAddr: '127.0.0.1',
+                portRange: {
+                    start: 20000,
+                    end: 29999,
+                },
+                connectTimeoutMs: 15000,
+                idleTimeoutMs: 300000,
+                serverNamePrefix: 'adb_',
+                visitorNamePrefix: 'ws_scrcpy_adb_visitor_',
+                ...config.adb,
+            },
+        };
+        if (
+            frpConfig.enabled &&
+            (!frpConfig.frps?.baseUrl ||
+                !frpConfig.frpc?.executablePath ||
+                !frpConfig.frpc?.serverAddr ||
+                !frpConfig.frpc?.serverPort ||
+                !frpConfig.frpc?.authToken ||
+                !frpConfig.adb?.secretKey)
+        ) {
+            throw Error(
+                'frp config requires frps.baseUrl, frpc.executablePath, frpc.serverAddr, frpc.serverPort, frpc.authToken, and adb.secretKey',
+            );
+        }
+        return frpConfig;
     }
     private static parseServerItem(config: Partial<ServerItem> = {}): ServerItem {
         const secure = config.secure || false;
@@ -79,7 +123,7 @@ export class Config {
     }
     public static getInstance(): Config {
         if (!this.instance) {
-            const configPath = process.env[EnvName.CONFIG_PATH];
+            const configPath = process.env[EnvName.CONFIG_PATH] || process.env.CONFIG_PATH;
             let userConfig: Configuration;
             if (!configPath) {
                 userConfig = {};
@@ -99,7 +143,7 @@ export class Config {
     }
 
     public static readFile(pathString: string): string {
-        const isAbsolute = pathString.startsWith('/');
+        const isAbsolute = path.isAbsolute(pathString);
         const absolutePath = isAbsolute ? pathString : path.resolve(process.cwd(), pathString);
         if (!fs.existsSync(absolutePath)) {
             throw Error(`Can't find file "${absolutePath}"`);
@@ -152,5 +196,9 @@ export class Config {
 
     public get servers(): ServerItem[] {
         return this.fullConfig.server;
+    }
+
+    public get frp(): FrpConfig | undefined {
+        return this.fullConfig.frp?.enabled ? this.fullConfig.frp : undefined;
     }
 }

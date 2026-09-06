@@ -4,6 +4,9 @@ export class ControlCenterCommand {
     public static KILL_SERVER = 'kill_server';
     public static START_SERVER = 'start_server';
     public static UPDATE_INTERFACES = 'update_interfaces';
+    public static CONNECT_FRP_DEVICE = 'connect_frp_device';
+    public static DISCONNECT_FRP_DEVICE = 'disconnect_frp_device';
+    public static REFRESH_FRP_DEVICES = 'refresh_frp_devices';
     public static CONFIGURE_STREAM = 'configure_stream';
     public static RUN_WDA = 'run-wda';
     public static REQUEST_WDA = 'request-wda';
@@ -45,6 +48,9 @@ export class ControlCenterCommand {
                 return command;
             case this.START_SERVER:
             case this.UPDATE_INTERFACES:
+            case this.CONNECT_FRP_DEVICE:
+            case this.DISCONNECT_FRP_DEVICE:
+            case this.REFRESH_FRP_DEVICES:
             case this.CONFIGURE_STREAM:
             case this.RUN_WDA:
                 return command;

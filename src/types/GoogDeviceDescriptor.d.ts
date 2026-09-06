@@ -11,4 +11,11 @@ export default interface GoogDeviceDescriptor extends BaseDeviceDescriptor {
     interfaces: NetInterface[];
     pid: number;
     'last.update.timestamp': number;
+    isFrpRemote?: boolean;
+    frpServerName?: string;
+    frpStatus?: string;
+    frpLocalSerial?: string;
+    frpLocalPort?: number;
+    frpVisitorName?: string;
+    frpPid?: number;
 }

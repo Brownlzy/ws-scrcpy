@@ -38,3 +38,31 @@ remoteHostList:
     secure: true
     hostname: third-mobile-stand.example.com
     port: 8443
+
+# Optional frp integration for replacing RemoteAssistant.
+# frps web admin is used to discover registered remote stcp proxies named "adb_<deviceId>".
+# ws-scrcpy starts a temporary frpc process for the selected remote device.
+frp:
+  enabled: false
+  frps:
+    baseUrl: http://frps.example.com:7500
+    username: admin
+    password: admin
+    timeoutMs: 5000
+  frpc:
+    executablePath: ../RemoteAssistant/frpc.exe
+    tempConfigDir: ./tmp/frpc
+    serverAddr: frps.example.com
+    serverPort: 7000
+    dnsServer: 223.5.5.5
+    authToken: redacted
+  adb:
+    bindAddr: 127.0.0.1
+    portRange:
+      start: 20000
+      end: 29999
+    connectTimeoutMs: 15000
+    idleTimeoutMs: 300000
+    secretKey: secret
+    serverNamePrefix: adb_
+    visitorNamePrefix: ws_scrcpy_adb_visitor_

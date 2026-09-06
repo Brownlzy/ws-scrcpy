@@ -11,6 +11,8 @@ import { ControlCenterCommand } from '../../../common/ControlCenterCommand';
 import * as os from 'os';
 import * as crypto from 'crypto';
 import { DeviceState } from '../../../common/DeviceState';
+import { Config } from '../../Config';
+import { FrpRemoteDeviceService } from '../frp/FrpRemoteDeviceService';
 
 export class ControlCenter extends BaseControlCenter<GoogDeviceDescriptor> implements Service {
     private static readonly defaultWaitAfterError = 1000;
@@ -24,11 +26,17 @@ export class ControlCenter extends BaseControlCenter<GoogDeviceDescriptor> imple
     private deviceMap: Map<string, Device> = new Map();
     private descriptors: Map<string, GoogDeviceDescriptor> = new Map();
     private readonly id: string;
+    private frpRemoteDeviceService?: FrpRemoteDeviceService;
 
     protected constructor() {
         super();
         const idString = `goog|${os.hostname()}|${os.uptime()}`;
         this.id = crypto.createHash('md5').update(idString).digest('hex');
+        const frpConfig = Config.getInstance().frp;
+        if (frpConfig) {
+            this.frpRemoteDeviceService = new FrpRemoteDeviceService(frpConfig);
+            this.frpRemoteDeviceService.on('device', this.onFrpRemoteDeviceUpdate);
+        }
     }
 
     public static getInstance(): ControlCenter {
@@ -78,7 +86,15 @@ export class ControlCenter extends BaseControlCenter<GoogDeviceDescriptor> imple
 
     private onDeviceUpdate = (device: Device): void => {
         const { udid, descriptor } = device;
+        if (this.frpRemoteDeviceService?.isManagedSerial(udid)) {
+            this.frpRemoteDeviceService.updateMappedDevice(descriptor);
+            return;
+        }
         this.descriptors.set(udid, descriptor);
+        this.emit('device', descriptor);
+    };
+
+    private onFrpRemoteDeviceUpdate = (descriptor: GoogDeviceDescriptor): void => {
         this.emit('device', descriptor);
     };
 
@@ -103,6 +119,11 @@ export class ControlCenter extends BaseControlCenter<GoogDeviceDescriptor> imple
             const { id, type } = device;
             this.handleConnected(id, type);
         });
+        if (this.frpRemoteDeviceService) {
+            await this.frpRemoteDeviceService.init().catch((error: Error) => {
+                console.error(`Error: Failed to init frp remote devices. ${error.message}`);
+            });
+        }
         this.initialized = true;
     }
 
@@ -130,7 +151,11 @@ export class ControlCenter extends BaseControlCenter<GoogDeviceDescriptor> imple
     }
 
     public getDevices(): GoogDeviceDescriptor[] {
-        return Array.from(this.descriptors.values());
+        if (this.frpRemoteDeviceService) {
+            return this.frpRemoteDeviceService.getDevices();
+        }
+        const devices = Array.from(this.descriptors.values());
+        return devices;
     }
 
     public getDevice(udid: string): Device | undefined {
@@ -153,16 +178,41 @@ export class ControlCenter extends BaseControlCenter<GoogDeviceDescriptor> imple
 
     public release(): void {
         this.stopTracker();
+        this.frpRemoteDeviceService?.release();
+    }
+
+    public async disconnectFrpDevice(udidOrSerial: string): Promise<void> {
+        await this.frpRemoteDeviceService?.disconnect(udidOrSerial);
     }
 
     public async runCommand(command: ControlCenterCommand): Promise<void> {
         const udid = command.getUdid();
+        const type = command.getType();
+        switch (type) {
+            case ControlCenterCommand.CONNECT_FRP_DEVICE:
+                if (!this.frpRemoteDeviceService) {
+                    throw new Error('frp remote device support is not configured');
+                }
+                await this.frpRemoteDeviceService.connect(udid);
+                return;
+            case ControlCenterCommand.DISCONNECT_FRP_DEVICE:
+                if (!this.frpRemoteDeviceService) {
+                    return;
+                }
+                await this.frpRemoteDeviceService.disconnect(udid);
+                return;
+            case ControlCenterCommand.REFRESH_FRP_DEVICES:
+                if (!this.frpRemoteDeviceService) {
+                    return;
+                }
+                await this.frpRemoteDeviceService.refresh();
+                return;
+        }
         const device = this.getDevice(udid);
         if (!device) {
             console.error(`Device with udid:"${udid}" not found`);
             return;
         }
-        const type = command.getType();
         switch (type) {
             case ControlCenterCommand.KILL_SERVER:
                 await device.killServer(command.getPid());
