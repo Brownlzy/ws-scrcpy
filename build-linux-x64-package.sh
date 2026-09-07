@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP="$ROOT/portable/ws-scrcpy-linux-x64"
 OUT="$ROOT/portable"
 LINUX_TOOLS="$ROOT/tools/linux-x64"
-# PKG_TARGET="${PKG_TARGET:-node16-linuxstatic-x64}"
+PKG_TARGET="${PKG_TARGET:-node16-linux-x64}"
 
 cd "$ROOT"
 
@@ -48,10 +48,10 @@ sed \
   -e 's#tools/adb.exe#tools/adb#g' \
   "$ROOT/config.yaml" > "$APP/config.yaml"
 
-npx --yes @yao-pkg/pkg "$ROOT/dist/index.js" --sea --targets node22-linux-x64 --output "$APP/ws-scrcpy"
+# npx --yes @yao-pkg/pkg "$ROOT/dist/index.js" --sea --targets node22-linux-x64 --output "$APP/ws-scrcpy"
 
-# echo "Packaging ws-scrcpy with pkg target: $PKG_TARGET"
-# npx --yes @yao-pkg/pkg "$ROOT/dist/index.js" --targets "$PKG_TARGET" --output "$APP/ws-scrcpy"
+echo "Packaging ws-scrcpy with pkg target: $PKG_TARGET"
+npx --yes @yao-pkg/pkg "$ROOT/dist/index.js" --targets "$PKG_TARGET" --output "$APP/ws-scrcpy"
 
 chmod +x "$APP/ws-scrcpy" "$APP/start.sh" "$APP/tools/frpc" "$APP/tools/adb"
 
