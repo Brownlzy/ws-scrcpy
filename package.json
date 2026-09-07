@@ -7,6 +7,8 @@
     "dist:dev": "webpack --config webpack/ws-scrcpy.dev.ts --stats-error-details",
     "dist:prod": "webpack --config webpack/ws-scrcpy.prod.ts --stats-error-details",
     "dist": "npm run dist:prod",
+    "package:win-x64": "build-win-x64-package.bat",
+    "package:linux-x64": "bash ./build-linux-x64-package.sh",
     "start": "npm run dist && cd dist && npm start",
     "script:dist:start": "node ./index.js",
     "postinstall": "node scripts/setup-appium.js",
