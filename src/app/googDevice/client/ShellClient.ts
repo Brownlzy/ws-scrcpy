@@ -129,6 +129,7 @@ export class ShellClient extends ManagerClient<ParamsShell, never> {
                 {
                     action: ACTION.SHELL,
                     udid: descriptor.udid,
+                    title: descriptor.titleUdid || descriptor.udid,
                 },
                 'shell',
                 params,

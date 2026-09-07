@@ -18,4 +18,5 @@ export default interface GoogDeviceDescriptor extends BaseDeviceDescriptor {
     frpLocalPort?: number;
     frpVisitorName?: string;
     frpPid?: number;
+    titleUdid?: string;
 }

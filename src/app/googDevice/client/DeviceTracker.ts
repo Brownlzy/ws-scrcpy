@@ -309,7 +309,7 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
 
     private appendConnectedActions(parent: HTMLElement, device: GoogDeviceDescriptor): void {
         const effectiveUdid = device.frpLocalSerial || device.udid;
-        const adbDevice = { ...device, udid: effectiveUdid };
+        const adbDevice = { ...device, udid: effectiveUdid, titleUdid: device.udid };
         const fullName = `${this.id}_${Util.escapeUdid(device.udid)}`;
 
         this.appendDedicatedLinkActions(parent, device);
@@ -483,7 +483,7 @@ export class DeviceTracker extends BaseDeviceTracker<GoogDeviceDescriptor, never
         this.appendDedicatedLinkActions(dedicatedBlock, device);
         services.appendChild(dedicatedBlock);
 
-        const adbDevice = { ...device, udid: effectiveUdid };
+        const adbDevice = { ...device, udid: effectiveUdid, titleUdid: device.udid };
         if (canUseAdbActions) {
             DeviceTracker.tools.forEach((tool) => {
                 const entry = tool.createEntryForDeviceList(adbDevice, blockClass, this.params);

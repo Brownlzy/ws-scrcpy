@@ -537,6 +537,7 @@ export class StreamClientScrcpy
             port,
             pathname,
             useProxy,
+            title: descriptor.titleUdid || descriptor.udid,
         };
         const dialog = new ConfigureScrcpy(tracker, descriptor, options);
         dialog.on('closed', StreamClientScrcpy.onConfigureDialogClosed);

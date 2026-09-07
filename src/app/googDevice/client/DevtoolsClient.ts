@@ -367,6 +367,7 @@ export class DevtoolsClient extends ManagerClient<ParamsDevtools, never> {
                 {
                     action: ACTION.DEVTOOLS,
                     udid: descriptor.udid,
+                    title: descriptor.titleUdid || descriptor.udid,
                 },
                 'devtools',
                 params,

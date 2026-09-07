@@ -74,6 +74,7 @@ export class FileListingClient extends ManagerClient<ParamsFileListing, never> i
                     action: ACTION.FILE_LISTING,
                     udid: descriptor.udid,
                     path: `${tempPath}/`,
+                    title: descriptor.titleUdid || descriptor.udid,
                 },
                 'list files',
                 params,

@@ -68,6 +68,7 @@ export class ExtendedSync {
                     return readNext();
                 case Protocol.DONE:
                     await this.parser.readBytes(4);
+                    stream.send(Buffer.from(reply));
                     stream.close(1000);
                     return;
                 case Protocol.FAIL:
