@@ -216,6 +216,18 @@ established over adb.
 You can specify a path to a configuration file in `WS_SCRCPY_CONFIG`
 environment variable.
 
+For source-tree startup with `config.yaml`, use:
+
+```shell
+# Windows
+win-start-config.bat
+
+# Linux
+bash ./linux-start-config.sh
+```
+
+Both scripts accept an optional config file path as the first argument.
+
 If you want to have another pathname than "/" you can specify it in the
 `WS_SCRCPY_PATHNAME` environment variable.
 

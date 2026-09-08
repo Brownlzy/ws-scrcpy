@@ -10,6 +10,8 @@
     "package:win-x64": "build-win-x64-package.bat",
     "package:linux-x64": "bash ./build-linux-x64-package.sh",
     "start": "npm run dist && cd dist && npm start",
+    "start:config:win": "win-start-config.bat",
+    "start:config:linux": "bash ./linux-start-config.sh",
     "script:dist:start": "node ./index.js",
     "postinstall": "node scripts/setup-appium.js",
     "lint": "eslint src/ --ext .ts",
