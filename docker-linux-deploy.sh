@@ -113,6 +113,8 @@ if [[ ! -f "$ROOT/tools/linux-x64/adb" ]]; then
   exit 1
 fi
 
+chmod +x "$ROOT/tools/linux-x64/frpc" "$ROOT/tools/linux-x64/adb"
+
 CONFIG_ABS="$(cd "$(dirname "$CONFIG_PATH")" && pwd)/$(basename "$CONFIG_PATH")"
 
 echo "[docker-linux-deploy] Source config: $CONFIG_ABS"
