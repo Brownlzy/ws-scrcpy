@@ -1,0 +1,33 @@
+FROM node:16-bullseye AS build
+
+WORKDIR /src
+
+COPY package.json package-lock.json ./
+COPY scripts ./scripts
+RUN npm ci
+
+COPY tsconfig.json ./
+COPY webpack ./webpack
+COPY typings ./typings
+COPY src ./src
+COPY vendor ./vendor
+COPY LICENSE ./
+
+RUN WS_SCRCPY_PORTABLE_BUNDLE=true npm run dist:dev
+
+FROM node:16-bullseye
+
+WORKDIR /app
+
+COPY --from=build /src/dist ./dist
+COPY tools/linux-x64/frpc ./tools/frpc
+COPY tools/linux-x64/adb ./tools/adb
+
+RUN chmod +x ./tools/frpc ./tools/adb && mkdir -p ./tmp/frpc
+
+ENV WS_SCRCPY_CONFIG=/app/config.yaml
+ENV NODE_ENV=production
+
+EXPOSE 8000
+
+CMD ["node", "/app/dist/index.js"]

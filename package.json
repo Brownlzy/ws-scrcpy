@@ -9,6 +9,7 @@
     "dist": "npm run dist:prod",
     "package:win-x64": "build-win-x64-package.bat",
     "package:linux-x64": "bash ./build-linux-x64-package.sh",
+    "deploy:docker:linux": "bash ./docker-linux-deploy.sh",
     "start": "npm run dist && cd dist && npm start",
     "start:config:win": "win-start-config.bat",
     "start:config:linux": "bash ./linux-start-config.sh",
