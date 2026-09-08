@@ -43,7 +43,9 @@ export class RemoteShell extends Mw {
         const env = Object.assign({}, process.env) as any;
         env['COLORTERM'] = 'truecolor';
         const cwd = params.cwd || env.PWD || process.cwd();
-        const term = spawn(AdbExtended.getExecutablePath(), ['-s', params.udid, 'shell', '-t', '-t'], {
+        const adbExecutablePath = AdbExtended.getExecutablePath();
+        AdbExtended.logExecutablePath('RemoteShell', adbExecutablePath);
+        const term = spawn(adbExecutablePath, ['-s', params.udid, 'shell', '-t', '-t'], {
             cwd,
             env,
             stdio: ['pipe', 'pipe', 'pipe'],

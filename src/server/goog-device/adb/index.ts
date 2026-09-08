@@ -11,9 +11,13 @@ interface Options {
 }
 
 export class AdbExtended extends Adb {
+    private static loggedExecutablePaths: { [key: string]: boolean } = {};
+
     static createClient(options: Options = {}): ExtendedClient {
+        const bin = options.bin || this.getExecutablePath();
+        this.logExecutablePath('createClient', bin);
         const opts: ClientOptions = {
-            bin: options.bin || this.getExecutablePath(),
+            bin,
             host: options.host || process.env.ADB_HOST || '127.0.0.1',
             port: options.port || 0,
         };
@@ -30,6 +34,15 @@ export class AdbExtended extends Adb {
 
     static getExecutablePath(): string {
         return this.resolveExecutablePath(Config.getInstance().frp?.adb.executablePath || 'adb');
+    }
+
+    static logExecutablePath(context: string, executablePath: string): void {
+        const key = `${context}:${executablePath}`;
+        if (this.loggedExecutablePaths[key]) {
+            return;
+        }
+        this.loggedExecutablePaths[key] = true;
+        console.log(`[AdbExtended] ${context} uses adb executable "${executablePath}"`);
     }
 
     private static resolveExecutablePath(executablePath: string): string {

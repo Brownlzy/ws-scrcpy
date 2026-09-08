@@ -9,6 +9,7 @@ const DEFAULT_PORT = 8000;
 
 const YAML_RE = /^.+\.(yaml|yml)$/i;
 const JSON_RE = /^.+\.(json|js)$/i;
+const DEFAULT_CONFIG_FILENAMES = ['config.yaml', 'config.yml', 'config.json'];
 
 export class Config {
     private static instance?: Config;
@@ -125,11 +126,13 @@ export class Config {
     }
     public static getInstance(): Config {
         if (!this.instance) {
-            const configPath = process.env[EnvName.CONFIG_PATH] || process.env.CONFIG_PATH;
+            const configPath = process.env[EnvName.CONFIG_PATH] || process.env.CONFIG_PATH || this.findDefaultConfig();
             let userConfig: Configuration;
             if (!configPath) {
                 userConfig = {};
+                console.log('[Config] No config file configured or discovered. Using built-in defaults.');
             } else {
+                console.log(`[Config] Loading config from "${path.resolve(process.cwd(), configPath)}"`);
                 if (configPath.match(YAML_RE)) {
                     userConfig = YAML.parse(this.readFile(configPath));
                 } else if (configPath.match(JSON_RE)) {
@@ -142,6 +145,19 @@ export class Config {
             this.instance = new Config(fullConfig);
         }
         return this.instance;
+    }
+
+    private static findDefaultConfig(): string | undefined {
+        const roots = [process.cwd(), path.resolve(process.cwd(), '..')];
+        for (const root of roots) {
+            for (const filename of DEFAULT_CONFIG_FILENAMES) {
+                const candidate = path.join(root, filename);
+                if (fs.existsSync(candidate)) {
+                    return candidate;
+                }
+            }
+        }
+        return;
     }
 
     public static readFile(pathString: string): string {

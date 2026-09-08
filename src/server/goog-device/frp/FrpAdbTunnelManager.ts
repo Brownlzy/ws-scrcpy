@@ -32,6 +32,8 @@ export class FrpAdbTunnelManager {
         this.tempConfigDir = path.resolve(process.cwd(), frpc.tempConfigDir);
         this.executablePath = path.resolve(process.cwd(), frpc.executablePath);
         this.adbExecutablePath = this.resolveExecutablePath(config.executablePath);
+        console.log(`[FrpAdbTunnelManager] frpc executable "${this.executablePath}"`);
+        console.log(`[FrpAdbTunnelManager] adb executable "${this.adbExecutablePath}"`);
     }
 
     public async connect(udid: string, serverName?: string): Promise<string> {
