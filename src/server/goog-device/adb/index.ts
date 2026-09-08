@@ -1,6 +1,8 @@
 import Adb from '@dead50f7/adbkit/lib/adb';
 import { ExtendedClient } from './ExtendedClient';
 import { ClientOptions } from '@dead50f7/adbkit/lib/ClientOptions';
+import * as path from 'path';
+import { Config } from '../../Config';
 
 interface Options {
     host?: string;
@@ -11,7 +13,7 @@ interface Options {
 export class AdbExtended extends Adb {
     static createClient(options: Options = {}): ExtendedClient {
         const opts: ClientOptions = {
-            bin: options.bin,
+            bin: options.bin || this.getExecutablePath(),
             host: options.host || process.env.ADB_HOST || '127.0.0.1',
             port: options.port || 0,
         };
@@ -24,5 +26,16 @@ export class AdbExtended extends Adb {
             }
         }
         return new ExtendedClient(opts);
+    }
+
+    static getExecutablePath(): string {
+        return this.resolveExecutablePath(Config.getInstance().frp?.adb.executablePath || 'adb');
+    }
+
+    private static resolveExecutablePath(executablePath: string): string {
+        if (path.isAbsolute(executablePath)) {
+            return executablePath;
+        }
+        return /[\\/]/.test(executablePath) ? path.resolve(process.cwd(), executablePath) : executablePath;
     }
 }

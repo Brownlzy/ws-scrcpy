@@ -6,6 +6,7 @@ import { XtermClientMessage, XtermServiceParameters } from '../../../types/Xterm
 import { ACTION } from '../../../common/Action';
 import { Multiplexer } from '../../../packages/multiplexer/Multiplexer';
 import { ChannelCode } from '../../../common/ChannelCode';
+import { AdbExtended } from '../adb';
 
 const EVENT_TYPE_SHELL = 'shell';
 
@@ -42,7 +43,7 @@ export class RemoteShell extends Mw {
         const env = Object.assign({}, process.env) as any;
         env['COLORTERM'] = 'truecolor';
         const cwd = params.cwd || env.PWD || process.cwd();
-        const term = spawn('adb', ['-s', params.udid, 'shell', '-t', '-t'], {
+        const term = spawn(AdbExtended.getExecutablePath(), ['-s', params.udid, 'shell', '-t', '-t'], {
             cwd,
             env,
             stdio: ['pipe', 'pipe', 'pipe'],
